@@ -5,6 +5,9 @@
 npm install
 ```
 
+## Install
+将utils.js 中APPID、APISecret、APIKey替换成自己的
+
 ## 启动
 ```shell
 npm start
