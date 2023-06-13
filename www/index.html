@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>星火认知大模型例子</title>
+  <style>
+    body {
+      background-color: #f3f3f3;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background-color: #ffffff;
+      height: 100%;
+      width: 1200px;
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .content {
+      flex: 1;
+      overflow: auto;
+      box-sizing: border-box;
+      padding: 20px;
+    }
+
+    .content-item {
+      border-radius: 5px;
+      padding: 5px 12px;
+      color: #ffffff;
+      font-size: 18px;
+      min-height: 34px;
+      box-sizing: border-box;
+      word-break: break-all;
+      max-width: 1000px;
+      margin-bottom: 20px;
+    }
+
+    .user {
+      float: right;
+      background-color: #409eff;
+      clear: left;
+    }
+
+    .assistant {
+      float: left;
+      background-color: #67c23a;
+      clear: right;
+    }
+
+    .footer {
+      height: 50px;
+      width: 900px;
+      box-shadow: 0px 0px 5px #c5c5c5;
+      border-radius: 5px;
+      margin: 50px auto;
+      display: flex;
+      align-items: center;
+      box-sizing: border-box;
+      padding: 0 12px;
+    }
+
+    .footer-input {
+      height: 40px;
+      outline: none;
+      background: transparent;
+      border: none;
+      outline: medium;
+      font-size: 18px;
+      flex: 1;
+    }
+
+    .footer-btn {
+      margin: 0;
+      padding: 0;
+      background-color: #409eff;
+      color: #ffffff;
+      border: 0px solid transparent;
+      outline: none;
+      padding: 6px 20px;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-left: 12px;
+    }
+
+    .footer-btn:hover {
+      background-color: #79bbff;
+    }
+
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="content" id="content"></div>
+    <div class="footer">
+      <input class="footer-input" id="ipt" type="text" placeholder="来聊聊吧~">
+      <button class="footer-btn" id="btn">发送</button>
+    </div>
+  </div>
+</body>
+<script>
+  let loading = false
+  const ws = new WebSocket('ws://localhost:3000')
+  // 连接成功事件
+  ws.onopen = () => {
+    console.log('连接服务器成功了。。。')
+  }
+  ws.onclose = () => {
+    console.log('连接服务器失败了')
+  }
+  ws.onmessage = (msg) => {
+    const data = JSON.parse(msg.data)
+    if (data.code === 200) {
+      // 判断该本次回答是否完成
+      if (data.status !== 2) {
+        const contentDocAll = document.querySelectorAll('.assistant')
+        const contentDoc = contentDocAll[contentDocAll.length - 1]
+        contentDoc.append(data.content)
+        scrollTo()
+      } else {
+        loading = false
+      }
+    } else {
+      alert(data.msg)
+      loading = false
+    }
+  }
+
+  document.querySelector('#btn').addEventListener('click', () => {
+    // 判断是否还在回答中
+    if (loading) return
+    const inputDoc = document.querySelector('#ipt')
+    const val = inputDoc.value
+    if (val == '') {
+      alert('请输入内容')
+      return
+    }
+    loading = true
+    let divDoc = document.createElement('div')
+    divDoc.setAttribute('class', 'content-item user')
+    divDoc.innerText = val
+    document.querySelector('#content').append(divDoc)
+    // 给服务器发送数据
+    ws.send(val)
+    inputDoc.value = ''
+    const contentDoc = document.createElement('div')
+    contentDoc.setAttribute('class', 'content-item assistant')
+    document.querySelector('#content').append(contentDoc)
+    scrollTo()
+  })
+
+  /**
+   *  内容滑动到最下方
+  */
+  function scrollTo() {
+    const contentDoc = document.querySelector('#content')
+    contentDoc.scrollTo({
+      top: contentDoc.scrollHeight,
+      behavior: 'smooth'
+    });
+  }
+</script>
+
+</html>
