@@ -8,15 +8,15 @@ const APIKey = 'APIKey'
  * @returns 
  */
 function createUrl() {
-  // 当前时间戳，采用RFC1123格式
-  const date = new Date().toGMTString()
   // 接口url
   const baseUrl = new URL('wss://spark-api.xf-yun.com/v1.1/chat')
-  // 获取主机名
+  // 当前时间戳，采用RFC1123格式
+  const date = new Date().toGMTString()
+  // 获取host
   const host = baseUrl.host
   // 拼接生成签名字符串
   const signatureStr = `host: ${host}\ndate: ${date}\nGET ${baseUrl.pathname} HTTP/1.1`
-  // 利用hmac-sha256算法结合APISecret对上一步的signatureStr签名，获得签名后的摘要
+  // 利用hmac-sha256算法结合APISecret对上一步的signatureStr签名，获得签名后的摘要signatureSha
   const hmac = crypto.createHmac('sha256', APISecret)
   hmac.update(signatureStr)
   const signatureSha = hmac.digest('bytes')
@@ -25,7 +25,7 @@ function createUrl() {
   // 利用上面生成的signature，拼接下方的字符串生成signatureOrigin
   const signatureOrigin = `api_key="${APIKey}", algorithm="hmac-sha256", headers="host date request-line", signature="${signature}"`
   // 最后再将上方的signatureOrigin进行base64编码,生成最终的authorization
-  let authorization = new Buffer.from(signatureOrigin).toString('base64')
+  const authorization = new Buffer.from(signatureOrigin).toString('base64')
   const url = `${baseUrl}?authorization=${authorization}&date=${urlencode(date)}&host=${host}`
   return url
 }
